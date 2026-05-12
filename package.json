@@ -1,6 +1,6 @@
 {
-  "name": "url-md-link",
-  "version": "1.0.0",
+  "name": "give-me-a-link",
+  "version": "1.1.1",
   "private": true,
   "description": "Copy the current page as a Markdown link to the clipboard.",
   "license": "MIT",

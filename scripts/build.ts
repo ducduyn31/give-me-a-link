@@ -35,9 +35,15 @@ const staticFiles: Array<[from: string, to: string]> = [
   ['assets/options.css', 'options.css'],
   ['LICENSE', 'LICENSE'],
   ['README.md', 'README.md'],
+  ['assets/icons/icon-16.png', 'icons/icon-16.png'],
+  ['assets/icons/icon-32.png', 'icons/icon-32.png'],
+  ['assets/icons/icon-48.png', 'icons/icon-48.png'],
+  ['assets/icons/icon-128.png', 'icons/icon-128.png'],
 ];
 for (const [from, to] of staticFiles) {
-  copyFileSync(resolve(root, from), resolve(outDir, to));
+  const dest = resolve(outDir, to);
+  mkdirSync(dirname(dest), { recursive: true });
+  copyFileSync(resolve(root, from), dest);
 }
 
 console.log(`built ${result.outputs.length} files into dist/extension/`);

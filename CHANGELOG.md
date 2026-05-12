@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- 368615d: rename to GiveMeALink
+- 1847acc: adding logo
+
+## 1.1.0
+
+### Minor Changes
+
+- 069cff5: support dynamic output and settings to control it
+
 All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

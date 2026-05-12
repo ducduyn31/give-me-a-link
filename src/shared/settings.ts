@@ -1,25 +1,25 @@
 import {
-  parseLabelFormat,
+  parseLinkTemplate,
   clampDuration,
+  DEFAULT_LINK_TEMPLATE,
   DEFAULT_TOAST_DURATION_MS,
-  type LabelFormat,
 } from './format';
 
 export interface Settings {
-  labelFormat: LabelFormat;
+  linkTemplate: string;
   toastEnabled: boolean;
   toastDurationMs: number;
 }
 
 export const DEFAULTS: Settings = {
-  labelFormat: 'host-first-segment',
+  linkTemplate: DEFAULT_LINK_TEMPLATE,
   toastEnabled: true,
   toastDurationMs: DEFAULT_TOAST_DURATION_MS,
 };
 
 function parseSettings(raw: Record<string, unknown>): Settings {
   return {
-    labelFormat: parseLabelFormat(raw.labelFormat),
+    linkTemplate: parseLinkTemplate(raw.linkTemplate),
     toastEnabled: typeof raw.toastEnabled === 'boolean' ? raw.toastEnabled : DEFAULTS.toastEnabled,
     toastDurationMs: clampDuration(raw.toastDurationMs),
   };

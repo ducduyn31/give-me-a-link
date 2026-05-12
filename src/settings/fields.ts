@@ -1,4 +1,10 @@
-import { clampDuration, parseLabelFormat } from '../shared/format';
+import {
+  clampDuration,
+  DEFAULT_LINK_TEMPLATE,
+  formatLink,
+  parseLinkTemplate,
+  type LinkSource,
+} from '../shared/format';
 import type { Settings } from '../shared/settings';
 
 type KeysOfType<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
@@ -15,6 +21,17 @@ interface SelectField<K extends StringKey> {
   disabledWhen?: (s: Settings) => boolean;
   options: ReadonlyArray<{ value: Settings[K]; label: string }>;
   parse: (raw: unknown) => Settings[K];
+}
+
+interface TextField<K extends StringKey> {
+  kind: 'text';
+  key: K;
+  label: string;
+  hint?: string;
+  placeholder?: string;
+  disabledWhen?: (s: Settings) => boolean;
+  parse: (raw: unknown) => Settings[K];
+  preview?: (parsed: Settings[K]) => string;
 }
 
 interface CheckboxField<K extends BooleanKey> {
@@ -38,30 +55,26 @@ interface NumberField<K extends NumberKey> {
 }
 
 export type Field =
-  | { [K in StringKey]: SelectField<K> }[StringKey]
+  | { [K in StringKey]: SelectField<K> | TextField<K> }[StringKey]
   | { [K in BooleanKey]: CheckboxField<K> }[BooleanKey]
   | { [K in NumberKey]: NumberField<K> }[NumberKey];
 
+export const PREVIEW_SAMPLE: LinkSource = {
+  url: 'https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3',
+  title: 'Issues · ducduyn31/give-me-a-link',
+};
+
 export const FIELDS: ReadonlyArray<Field> = [
   {
-    kind: 'select',
-    key: 'labelFormat',
-    label: 'Label format',
+    kind: 'text',
+    key: 'linkTemplate',
+    label: 'Clipboard template',
     hint:
-      'Controls what appears inside the [...] of the Markdown link. ' +
-      'The URL in (...) always includes the full query and hash.',
-    options: [
-      { value: 'host', label: 'host — e.g. github.com' },
-      {
-        value: 'host-first-segment',
-        label: 'host + first segment — e.g. github.com/anthropics',
-      },
-      {
-        value: 'host-full-path',
-        label: 'host + full path — e.g. github.com/anthropics/claude-code/issues/123',
-      },
-    ],
-    parse: parseLabelFormat,
+      'Tokens: {host}, {path}, {path[0]} (or any non-negative index), {url}, {title}. ' +
+      'Unknown {tokens} are left as-is. Empty value falls back to the default.',
+    placeholder: DEFAULT_LINK_TEMPLATE,
+    parse: parseLinkTemplate,
+    preview: (template) => formatLink(PREVIEW_SAMPLE, template),
   },
   {
     kind: 'checkbox',

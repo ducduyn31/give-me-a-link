@@ -13,7 +13,7 @@
 // Required env (Firefox):    FIREFOX_JWT_ISSUER, FIREFOX_JWT_SECRET
 // Required env (GH release): GITHUB_TOKEN (provided by Actions)
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,25 @@ const version: string = pkg.version;
 const zipPath = resolve(root, 'dist', `${pkg.name}-${version}.zip`);
 const extDir = resolve(root, 'dist/extension');
 const tag = `v${version}`;
+
+// changesets/action calls `publish` on every push to main, even when there
+// are no pending changesets. Bail early if this version is already released
+// so subsequent pushes (e.g. dependabot merges) don't try to re-upload.
+// Important: only treat an explicit "not found" as "go ahead and release" —
+// any other gh failure (auth/network) must abort so we don't re-upload
+// binaries to the Chrome/Firefox stores.
+if (process.env.GITHUB_TOKEN) {
+  const existing = spawnSync('gh', ['release', 'view', tag], { cwd: root, encoding: 'utf8' });
+  if (existing.status === 0) {
+    console.log(`Release ${tag} already exists, nothing to do.`);
+    process.exit(0);
+  }
+  const stderr = (existing.stderr || '') + (existing.stdout || '');
+  if (!/not found/i.test(stderr)) {
+    console.error(`gh release view ${tag} failed (exit ${existing.status}):\n${stderr}`);
+    process.exit(1);
+  }
+}
 
 execFileSync('bun', ['run', 'package'], { cwd: root, stdio: 'inherit' });
 

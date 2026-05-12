@@ -65,6 +65,16 @@ Hard-coded behaviors:
 
 - A leading `www.` is always stripped from `{host}`.
 
+## Privacy
+
+GiveMeALink runs entirely locally. It does not collect, transmit, or store any data on remote servers.
+
+- Reads the current tab's URL and title only at the moment you press the configured shortcut — never in the background.
+- Persists your settings (template, toast preferences) via `chrome.storage`, which lives on your device.
+- Makes no network requests. No analytics, no telemetry, no remote code.
+
+The `activeTab` and `scripting` permissions exist solely to inject the success toast into the page after a copy; the injected code does not read page content.
+
 ## Development
 
 Requires [Bun](https://bun.com) 1.2+.

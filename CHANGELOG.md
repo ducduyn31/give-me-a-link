@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- 368615d: rename to GiveMeALink
+- 1847acc: adding logo
+
 ## 1.1.0
 
 ### Minor Changes

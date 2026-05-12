@@ -15,7 +15,7 @@
     "package": "bun scripts/package.ts",
     "verify": "bun run lint && bun run format:check && bun run typecheck && bun test",
     "changeset": "changeset",
-    "version": "changeset version && bun scripts/sync-manifest-version.ts",
+    "version": "changeset version && bun scripts/sync-manifest-version.ts && bun run format",
     "release": "bun scripts/release.ts"
   },
   "devDependencies": {

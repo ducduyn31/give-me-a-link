@@ -20,7 +20,7 @@ chrome.commands.onCommand.addListener(async (command: string) => {
     }
 
     const settings = await loadSettings();
-    const text = formatLink(tab.url, settings.labelFormat);
+    const text = formatLink({ url: tab.url, title: tab.title }, settings.linkTemplate);
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },

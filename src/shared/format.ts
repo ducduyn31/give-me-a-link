@@ -1,56 +1,46 @@
-/**
- * Supported label formats for the Markdown link's `[label]` portion.
- *
- * The URL inside `(...)` is always the full original href (query + hash
- * preserved). Only the label changes. `www.` is always stripped from the host.
- *
- * - `host` — host only.
- *     `https://www.github.com/anthropics/claude-code` → `[github.com](...)`
- * - `host-first-segment` — host plus the first non-empty path segment. Falls
- *   back to host alone when the path is empty.
- *     `https://github.com/anthropics/claude-code/issues/123`
- *       → `[github.com/anthropics](...)`
- *     `https://github.com/` → `[github.com](...)`
- * - `host-full-path` — host plus the full pathname, with any trailing slash
- *   stripped from the label only (the URL inside `(...)` keeps it).
- *     `https://example.com/a/b/` → `[example.com/a/b](https://example.com/a/b/)`
- *
- * This tuple is the runtime source of truth: it's iterated by
- * `parseLabelFormat` to validate untrusted input (chrome.storage values, the
- * options-page select element) and it derives the `LabelFormat` type. Adding
- * a new format here is the only change needed to make it accepted at the
- * boundary — `formatLink`'s switch will then fail to typecheck until handled.
- */
-export const LABEL_FORMATS = ['host', 'host-first-segment', 'host-full-path'] as const;
-export type LabelFormat = (typeof LABEL_FORMATS)[number];
+export const DEFAULT_LINK_TEMPLATE = '[{host}/{path[0]}]({url})';
+export const MAX_TEMPLATE_LENGTH = 500;
 
-export const DEFAULT_LABEL_FORMAT: LabelFormat = 'host-first-segment';
 export const DEFAULT_TOAST_DURATION_MS = 1500;
 export const MIN_TOAST_DURATION_MS = 200;
 export const MAX_TOAST_DURATION_MS = 10000;
 
-export function parseLabelFormat(value: unknown): LabelFormat {
-  return (LABEL_FORMATS as readonly string[]).includes(value as string)
-    ? (value as LabelFormat)
-    : DEFAULT_LABEL_FORMAT;
+export function parseLinkTemplate(value: unknown): string {
+  if (typeof value !== 'string') return DEFAULT_LINK_TEMPLATE;
+  if (value.length === 0 || value.length > MAX_TEMPLATE_LENGTH) return DEFAULT_LINK_TEMPLATE;
+  return value;
 }
 
-export function formatLink(urlString: string, labelFormat: LabelFormat): string {
-  const url = new URL(urlString);
-  const host = url.hostname.replace(/^www\./, '');
+export interface LinkSource {
+  url: string;
+  title?: string;
+}
 
-  switch (labelFormat) {
-    case 'host':
-      return `[${host}](${url.href})`;
-    case 'host-full-path': {
-      const path = url.pathname.replace(/\/$/, '');
-      return `[${path ? host + path : host}](${url.href})`;
+const PATH_INDEX = /^path\[(\d+)\]$/;
+
+export function formatLink(source: LinkSource, template: string): string {
+  const u = new URL(source.url);
+  const host = u.hostname.replace(/^www\./, '');
+  const segments = u.pathname.split('/').filter(Boolean);
+  const title = source.title ?? '';
+
+  return template.replace(/\{([^}]+)\}/g, (raw, key: string) => {
+    switch (key) {
+      case 'host':
+        return host;
+      case 'path':
+        return u.pathname;
+      case 'url':
+        return u.href;
+      case 'title':
+        return title;
+      default: {
+        const m = PATH_INDEX.exec(key);
+        if (m) return segments[Number(m[1])] ?? '';
+        return raw;
+      }
     }
-    case 'host-first-segment': {
-      const first = url.pathname.split('/').find(Boolean);
-      return `[${first ? `${host}/${first}` : host}](${url.href})`;
-    }
-  }
+  });
 }
 
 export function clampDuration(value: unknown): number {

@@ -33,7 +33,8 @@ label {
 }
 
 select,
-input[type='number'] {
+input[type='number'],
+input[type='text'] {
   width: 100%;
   padding: 8px 10px;
   font-size: 14px;
@@ -43,9 +44,27 @@ input[type='number'] {
   box-sizing: border-box;
 }
 
-input[type='number']:disabled {
+input[type='text'] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+input[type='number']:disabled,
+input[type='text']:disabled {
   color: #9ca3af;
   background: #f9fafb;
+}
+
+.preview {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #1c1c1e;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .row {

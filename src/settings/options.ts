@@ -1,4 +1,4 @@
-import { type Field, FIELDS } from './fields';
+import { type Field, FIELDS, PREVIEW_SAMPLE } from './fields';
 import { loadSettings, saveSettings, type Settings } from '../shared/settings';
 
 const STATUS_IDLE = 'Settings save automatically.';
@@ -54,6 +54,33 @@ function renderField(
         node: wrapper,
         applyDependency: (s) => {
           select.disabled = field.disabledWhen?.(s) ?? false;
+        },
+      };
+    }
+    case 'text': {
+      const input = el('input', { type: 'text', id });
+      if (field.placeholder) input.placeholder = field.placeholder;
+      input.value = initial[field.key];
+      const preview = field.preview;
+      const previewEl = preview
+        ? el('pre', { className: 'preview' }, preview(initial[field.key]))
+        : null;
+      const previewLabel = preview
+        ? el('div', { className: 'hint' }, `Preview for ${PREVIEW_SAMPLE.url}`)
+        : null;
+      input.addEventListener('input', () => {
+        const next = field.parse(input.value);
+        if (previewEl && preview) previewEl.textContent = preview(next);
+        save(patch(field.key, next));
+      });
+      wrapper.append(el('label', { htmlFor: id }, field.label), input);
+      if (hint) wrapper.append(hint);
+      if (previewLabel) wrapper.append(previewLabel);
+      if (previewEl) wrapper.append(previewEl);
+      return {
+        node: wrapper,
+        applyDependency: (s) => {
+          input.disabled = field.disabledWhen?.(s) ?? false;
         },
       };
     }

@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "URL → Markdown Link",
+  "version": "1.0.0",
+  "description": "Copy the current page as a Markdown link. Cmd+. on macOS, Ctrl+. elsewhere.",
+  "author": "danielng",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "commands": {
+    "copy-markdown-link": {
+      "suggested_key": {
+        "default": "Ctrl+Period",
+        "mac": "Command+Period"
+      },
+      "description": "Copy current page as Markdown link to clipboard"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "url-md-link@local"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  },
+  "env": {
+    "browser": true,
+    "serviceworker": true,
+    "es2023": true
+  },
+  "globals": {
+    "chrome": "readonly",
+    "browser": "readonly"
+  },
+  "ignorePatterns": ["node_modules", "dist"],
+  "overrides": [
+    {
+      "files": ["test/**/*.ts", "scripts/**/*.ts"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

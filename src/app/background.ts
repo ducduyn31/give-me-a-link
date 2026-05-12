@@ -1,0 +1,33 @@
+import { formatLink } from '../shared/format';
+import { loadSettings } from '../shared/settings';
+import { copyAndNotify } from './inject/toast';
+
+const COMMAND_NAME = 'copy-markdown-link';
+const SUPPORTED_SCHEME = /^https?:/i;
+
+chrome.commands.onCommand.addListener(async (command: string) => {
+  if (command !== COMMAND_NAME) return;
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab?.url || tab.id === undefined) {
+      console.warn('[url-md-link] no active tab URL');
+      return;
+    }
+    if (!SUPPORTED_SCHEME.test(tab.url)) {
+      console.warn('[url-md-link] unsupported URL scheme:', tab.url);
+      return;
+    }
+
+    const settings = await loadSettings();
+    const text = formatLink(tab.url, settings.labelFormat);
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: copyAndNotify,
+      args: [{ text, toastEnabled: settings.toastEnabled, durationMs: settings.toastDurationMs }],
+    });
+  } catch (err) {
+    console.warn('[url-md-link] failed:', err);
+  }
+});

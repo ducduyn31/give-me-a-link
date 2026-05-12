@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- e7e3cb5: add item in Github menu dropdown to copy permalink as a markdown link
+
 ## 1.1.1
 
 ### Patch Changes

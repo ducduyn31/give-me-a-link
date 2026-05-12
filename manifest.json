@@ -30,7 +30,10 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "give-me-a-link@local"
+      "id": "give-me-a-link@coffeewithegg.com",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   }
 }

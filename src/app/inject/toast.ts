@@ -70,7 +70,7 @@ export function copyAndNotify(args: CopyAndNotifyArgs): void {
   navigator.clipboard.writeText(text).then(
     () => showToast('success', 'Copied', text),
     (err: unknown) => {
-      console.warn('[url-md-link] clipboard write failed:', err);
+      console.warn('[give-me-a-link] clipboard write failed:', err);
       showToast('error', 'Copy failed', String(err instanceof Error ? err.message : err));
     },
   );

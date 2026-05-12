@@ -6,14 +6,14 @@ import {
   parseLinkTemplate,
 } from '../src/shared/format';
 
-const SAMPLE_URL = 'https://github.com/ducduyn31/url-md-link/issues/12?tab=open#comment-3';
+const SAMPLE_URL = 'https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3';
 
 test('formatLink: {host} strips leading www.', () => {
   expect(formatLink({ url: 'https://www.github.com/foo' }, '{host}')).toBe('github.com');
 });
 
 test('formatLink: {path} returns full pathname with leading slash', () => {
-  expect(formatLink({ url: SAMPLE_URL }, '{path}')).toBe('/ducduyn31/url-md-link/issues/12');
+  expect(formatLink({ url: SAMPLE_URL }, '{path}')).toBe('/ducduyn31/give-me-a-link/issues/12');
 });
 
 test('formatLink: {path[0]} returns first non-empty segment', () => {

@@ -1,9 +1,9 @@
-# URL → Markdown Link
+# GiveMeALink — Copy as Markdown Link
 
 Tiny cross-browser extension. Press the shortcut on any page and your clipboard gets a Markdown link like:
 
 ```
-[github.com/ducduyn31](https://github.com/ducduyn31/url-md-link/issues/12?tab=open)
+[github.com/ducduyn31](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)
 ```
 
 ## Shortcut
@@ -44,20 +44,20 @@ From the extensions page, open the extension's **Options** / **Preferences**:
 
 - **Clipboard template** — a string that defines the entire text written to the clipboard. The options page renders a live preview as you type. Default: `[{host}/{path[0]}]({url})`. Available tokens:
   - `{host}` — hostname with leading `www.` stripped (e.g. `github.com`).
-  - `{path}` — full pathname with leading slash (e.g. `/ducduyn31/url-md-link/issues/12`).
+  - `{path}` — full pathname with leading slash (e.g. `/ducduyn31/give-me-a-link/issues/12`).
   - `{path[N]}` — the Nth non-empty path segment, 0-indexed (e.g. `{path[0]}` → `ducduyn31`). Out-of-range indices render as empty.
   - `{url}` — full original URL, including query string and hash.
   - `{title}` — current tab title.
   - Unknown `{tokens}` are left literal so typos are visible. An empty template falls back to the default.
 
-  Examples against `https://github.com/ducduyn31/url-md-link/issues/12?tab=open`:
+  Examples against `https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open`:
 
-  | Template                              | Result                                                                                                      |
-  | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-  | `[{host}/{path[0]}]({url})` (default) | `[github.com/ducduyn31](https://github.com/ducduyn31/url-md-link/issues/12?tab=open)`                       |
-  | `[{host}{path}]({url})`               | `[github.com/ducduyn31/url-md-link/issues/12](https://github.com/ducduyn31/url-md-link/issues/12?tab=open)` |
-  | `[{host}]({url})`                     | `[github.com](https://github.com/ducduyn31/url-md-link/issues/12?tab=open)`                                 |
-  | `{title} — {url}`                     | `Issue 12 · ducduyn31/url-md-link — https://github.com/ducduyn31/url-md-link/issues/12?tab=open`            |
+  | Template                              | Result                                                                                                            |
+  | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+  | `[{host}/{path[0]}]({url})` (default) | `[github.com/ducduyn31](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)`                          |
+  | `[{host}{path}]({url})`               | `[github.com/ducduyn31/give-me-a-link/issues/12](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)` |
+  | `[{host}]({url})`                     | `[github.com](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)`                                    |
+  | `{title} — {url}`                     | `Issue 12 · ducduyn31/give-me-a-link — https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open`            |
 
 - **Toast** — show a small confirmation toast in the current page after copy. On by default. Duration in milliseconds, 200–10000.
 

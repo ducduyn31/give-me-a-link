@@ -60,8 +60,8 @@ export type Field =
   | { [K in NumberKey]: NumberField<K> }[NumberKey];
 
 export const PREVIEW_SAMPLE: LinkSource = {
-  url: 'https://github.com/ducduyn31/url-md-link/issues/12?tab=open#comment-3',
-  title: 'Issues · ducduyn31/url-md-link',
+  url: 'https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3',
+  title: 'Issues · ducduyn31/give-me-a-link',
 };
 
 export const FIELDS: ReadonlyArray<Field> = [

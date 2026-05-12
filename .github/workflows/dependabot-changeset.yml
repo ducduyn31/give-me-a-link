@@ -56,7 +56,7 @@ jobs:
           mkdir -p .changeset
           {
             echo "---"
-            echo "'url-md-link': patch"
+            echo "'give-me-a-link': patch"
             echo "---"
             echo ""
             echo "$PR_TITLE"

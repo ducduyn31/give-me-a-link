@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "URL → Markdown Link",
+  "name": "GiveMeALink — Copy as Markdown Link",
   "version": "1.1.0",
   "description": "Copy the current page as a Markdown link. Cmd+. on macOS, Ctrl+. elsewhere.",
   "author": "danielng",
@@ -24,7 +24,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "url-md-link@local"
+      "id": "give-me-a-link@local"
     }
   }
 }

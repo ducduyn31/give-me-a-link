@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-// Bundles src/app/background.ts and src/settings/options.ts into
-// dist/extension/ as self-contained IIFE files, then copies static assets
+// Bundles src/app/background.ts, src/app/content/github-menu.ts, and
+// src/settings/options.ts into dist/extension/ as self-contained IIFE files,
+// then copies static assets
 // (manifest, options HTML/CSS, license, readme) alongside them.
 // IIFE format works both in a Chrome MV3 service worker and a Firefox MV3
 // event page, so the manifest can keep its cross-browser background block
@@ -17,7 +18,11 @@ rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
 const result = await Bun.build({
-  entrypoints: [resolve(root, 'src/app/background.ts'), resolve(root, 'src/settings/options.ts')],
+  entrypoints: [
+    resolve(root, 'src/app/background.ts'),
+    resolve(root, 'src/app/content/github-menu.ts'),
+    resolve(root, 'src/settings/options.ts'),
+  ],
   outdir: outDir,
   format: 'iife',
   target: 'browser',

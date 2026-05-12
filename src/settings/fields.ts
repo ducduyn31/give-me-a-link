@@ -1,8 +1,14 @@
 import {
+  clampCompactPathMaxLen,
   clampDuration,
+  DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  DEFAULT_GITHUB_LINK_TEMPLATE,
   DEFAULT_LINK_TEMPLATE,
+  formatGithubLink,
   formatLink,
+  parseGithubLinkTemplate,
   parseLinkTemplate,
+  type GithubLinkSource,
   type LinkSource,
 } from '../shared/format';
 import type { Settings } from '../shared/settings';
@@ -32,6 +38,7 @@ interface TextField<K extends StringKey> {
   disabledWhen?: (s: Settings) => boolean;
   parse: (raw: unknown) => Settings[K];
   preview?: (parsed: Settings[K]) => string;
+  previewSourceLabel?: string;
 }
 
 interface CheckboxField<K extends BooleanKey> {
@@ -64,6 +71,17 @@ export const PREVIEW_SAMPLE: LinkSource = {
   title: 'Issues · ducduyn31/give-me-a-link',
 };
 
+export const PREVIEW_GITHUB_SAMPLE: GithubLinkSource = {
+  url: 'https://github.com/ducduyn31/give-me-a-link/blob/0123456789abcdef/src/app/inject/toast.ts#L10-L20',
+  owner: 'ducduyn31',
+  repo: 'give-me-a-link',
+  ref: '0123456789abcdef',
+  filepath: 'src/app/inject/toast.ts',
+  startLine: 10,
+  endLine: 20,
+  title: 'give-me-a-link/src/app/inject/toast.ts at main · ducduyn31/give-me-a-link',
+};
+
 export const FIELDS: ReadonlyArray<Field> = [
   {
     kind: 'text',
@@ -75,6 +93,7 @@ export const FIELDS: ReadonlyArray<Field> = [
     placeholder: DEFAULT_LINK_TEMPLATE,
     parse: parseLinkTemplate,
     preview: (template) => formatLink(PREVIEW_SAMPLE, template),
+    previewSourceLabel: PREVIEW_SAMPLE.url,
   },
   {
     kind: 'checkbox',
@@ -91,5 +110,33 @@ export const FIELDS: ReadonlyArray<Field> = [
     step: 100,
     disabledWhen: (s) => !s.toastEnabled,
     parse: clampDuration,
+  },
+  {
+    kind: 'text',
+    key: 'githubLinkTemplate',
+    label: 'GitHub line-link template',
+    hint:
+      'Used by the "Copy as Markdown link" item injected into GitHub\'s blob-page selection menu. ' +
+      'Tokens: {owner}, {repo}, {ref}, {filepath}, {compactFilepath}, {lines}, {url}, {title}. ' +
+      'Unknown {tokens} are left as-is. Empty value falls back to the default.',
+    placeholder: DEFAULT_GITHUB_LINK_TEMPLATE,
+    parse: parseGithubLinkTemplate,
+    preview: (template) =>
+      formatGithubLink(PREVIEW_GITHUB_SAMPLE, template, {
+        compactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+      }),
+    previewSourceLabel: PREVIEW_GITHUB_SAMPLE.url,
+  },
+  {
+    kind: 'number',
+    key: 'githubCompactPathMaxLen',
+    label: 'GitHub compact path threshold (chars)',
+    hint:
+      'When {compactFilepath} is used, paths longer than this collapse middle segments with "…". ' +
+      'Between 10 and 200.',
+    min: 10,
+    max: 200,
+    step: 1,
+    parse: clampCompactPathMaxLen,
   },
 ];

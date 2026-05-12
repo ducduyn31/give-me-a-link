@@ -1,20 +1,28 @@
 import {
-  parseLinkTemplate,
+  clampCompactPathMaxLen,
   clampDuration,
+  DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  DEFAULT_GITHUB_LINK_TEMPLATE,
   DEFAULT_LINK_TEMPLATE,
   DEFAULT_TOAST_DURATION_MS,
+  parseGithubLinkTemplate,
+  parseLinkTemplate,
 } from './format';
 
 export interface Settings {
   linkTemplate: string;
   toastEnabled: boolean;
   toastDurationMs: number;
+  githubLinkTemplate: string;
+  githubCompactPathMaxLen: number;
 }
 
 export const DEFAULTS: Settings = {
   linkTemplate: DEFAULT_LINK_TEMPLATE,
   toastEnabled: true,
   toastDurationMs: DEFAULT_TOAST_DURATION_MS,
+  githubLinkTemplate: DEFAULT_GITHUB_LINK_TEMPLATE,
+  githubCompactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
 };
 
 function parseSettings(raw: Record<string, unknown>): Settings {
@@ -22,6 +30,8 @@ function parseSettings(raw: Record<string, unknown>): Settings {
     linkTemplate: parseLinkTemplate(raw.linkTemplate),
     toastEnabled: typeof raw.toastEnabled === 'boolean' ? raw.toastEnabled : DEFAULTS.toastEnabled,
     toastDurationMs: clampDuration(raw.toastDurationMs),
+    githubLinkTemplate: parseGithubLinkTemplate(raw.githubLinkTemplate),
+    githubCompactPathMaxLen: clampCompactPathMaxLen(raw.githubCompactPathMaxLen),
   };
 }
 

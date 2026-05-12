@@ -28,6 +28,18 @@ jobs:
 
       - run: bun run verify
 
+      # Pre-compute the next version so the release PR title/commit can
+      # include it. On the publish run there are no pending changesets,
+      # so `newVersion` is null and we fall back to a placeholder that's
+      # never actually used (no PR is created in that case).
+      - name: Resolve next version
+        id: next-version
+        run: |
+          bun changeset status --output=release-status.json
+          NEXT_VERSION=$(jq -r '.releases[0].newVersion // "next"' release-status.json)
+          echo "version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+          rm release-status.json
+
       # changesets/action expects a `version` script and a `publish` script.
       # `version` runs `changeset version` + syncs manifest.json.
       # `publish` runs our marketplace release script.
@@ -43,11 +55,15 @@ jobs:
         with:
           version: bun run version
           publish: bun run release
-          commit: 'chore: release'
-          title: 'chore: release'
+          commit: 'chore: release v${{ steps.next-version.outputs.version }}'
+          title: 'chore: release v${{ steps.next-version.outputs.version }}'
           createGithubReleases: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Must NOT be the default GITHUB_TOKEN — PRs and commits authored
+          # by GITHUB_TOKEN do not trigger other workflows (e.g. CI), which
+          # would leave the release PR without status checks. Use a PAT
+          # (or GitHub App token) with `contents: write` + `pull-requests: write`.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}

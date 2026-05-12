@@ -1,9 +1,17 @@
 import { test, expect } from 'bun:test';
 import {
+  clampCompactPathMaxLen,
   clampDuration,
+  compactPath,
+  DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  DEFAULT_GITHUB_LINK_TEMPLATE,
   DEFAULT_LINK_TEMPLATE,
+  formatGithubLink,
+  formatLines,
   formatLink,
+  parseGithubLinkTemplate,
   parseLinkTemplate,
+  type GithubLinkSource,
 } from '../src/shared/format';
 
 const SAMPLE_URL = 'https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3';
@@ -92,4 +100,119 @@ test('clampDuration: defaults on non-numeric input', () => {
 
 test('clampDuration: defaults on undefined', () => {
   expect(clampDuration(undefined)).toBe(1500);
+});
+
+const GH_SOURCE: GithubLinkSource = {
+  url: 'https://github.com/owner/repo/blob/abc123/src/app/inject/toast.ts#L10-L20',
+  owner: 'owner',
+  repo: 'repo',
+  ref: 'abc123',
+  filepath: 'src/app/inject/toast.ts',
+  startLine: 10,
+  endLine: 20,
+  title: 'toast.ts at abc123 · owner/repo',
+};
+
+test('compactPath: short path passes through', () => {
+  expect(compactPath('src/app/background.ts', 40)).toBe('src/app/background.ts');
+});
+
+test('compactPath: long path collapses middle segments with …', () => {
+  expect(compactPath('src/components/ui/widgets/buttons/PrimaryButton.tsx', 24)).toBe(
+    'src/…/PrimaryButton.tsx',
+  );
+});
+
+test('compactPath: 2-segment path is not collapsed', () => {
+  expect(compactPath('verylongdirname/verylongfilename.ts', 10)).toBe(
+    'verylongdirname/verylongfilename.ts',
+  );
+});
+
+test('compactPath: single-segment path is not collapsed', () => {
+  expect(compactPath('superlongsinglefilename.ts', 10)).toBe('superlongsinglefilename.ts');
+});
+
+test('formatLines: undefined start renders empty', () => {
+  expect(formatLines(undefined, undefined)).toBe('');
+});
+
+test('formatLines: single line renders Lstart', () => {
+  expect(formatLines(7)).toBe('L7');
+});
+
+test('formatLines: same start and end renders Lstart only', () => {
+  expect(formatLines(7, 7)).toBe('L7');
+});
+
+test('formatLines: range renders Lstart-Lend', () => {
+  expect(formatLines(10, 20)).toBe('L10-L20');
+});
+
+test('formatGithubLink: default template renders compact filepath + range', () => {
+  const out = formatGithubLink(GH_SOURCE, DEFAULT_GITHUB_LINK_TEMPLATE, {
+    compactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  });
+  expect(out).toBe(`[src/app/inject/toast.ts#L10-L20](${GH_SOURCE.url})`);
+});
+
+test('formatGithubLink: applies compactPath when path exceeds threshold', () => {
+  const long: GithubLinkSource = { ...GH_SOURCE, filepath: 'src/a/b/c/d/e/f/long-name.ts' };
+  expect(formatGithubLink(long, '{compactFilepath}', { compactPathMaxLen: 10 })).toBe(
+    'src/…/long-name.ts',
+  );
+});
+
+test('formatGithubLink: substitutes all tokens', () => {
+  const out = formatGithubLink(GH_SOURCE, '{owner}/{repo}@{ref} {filepath}#{lines} {url} {title}', {
+    compactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  });
+  expect(out).toBe(
+    `owner/repo@abc123 src/app/inject/toast.ts#L10-L20 ${GH_SOURCE.url} ${GH_SOURCE.title}`,
+  );
+});
+
+test('formatGithubLink: empty lines when selection absent', () => {
+  const src: GithubLinkSource = { ...GH_SOURCE, startLine: undefined, endLine: undefined };
+  expect(
+    formatGithubLink(src, '[{filepath}]({url})', {
+      compactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+    }),
+  ).toBe(`[src/app/inject/toast.ts](${GH_SOURCE.url})`);
+});
+
+test('formatGithubLink: unknown token is left literal', () => {
+  const out = formatGithubLink(GH_SOURCE, '{nope}-{owner}', {
+    compactPathMaxLen: DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
+  });
+  expect(out).toBe('{nope}-owner');
+});
+
+test('parseGithubLinkTemplate: passes through a valid string', () => {
+  expect(parseGithubLinkTemplate('[{filepath}]({url})')).toBe('[{filepath}]({url})');
+});
+
+test('parseGithubLinkTemplate: empty falls back to default', () => {
+  expect(parseGithubLinkTemplate('')).toBe(DEFAULT_GITHUB_LINK_TEMPLATE);
+});
+
+test('parseGithubLinkTemplate: non-string falls back to default', () => {
+  expect(parseGithubLinkTemplate(undefined)).toBe(DEFAULT_GITHUB_LINK_TEMPLATE);
+  expect(parseGithubLinkTemplate(42)).toBe(DEFAULT_GITHUB_LINK_TEMPLATE);
+});
+
+test('clampCompactPathMaxLen: clamps below minimum', () => {
+  expect(clampCompactPathMaxLen(5)).toBe(10);
+});
+
+test('clampCompactPathMaxLen: clamps above maximum', () => {
+  expect(clampCompactPathMaxLen(500)).toBe(200);
+});
+
+test('clampCompactPathMaxLen: rounds non-integer', () => {
+  expect(clampCompactPathMaxLen(33.6)).toBe(34);
+});
+
+test('clampCompactPathMaxLen: defaults on non-numeric', () => {
+  expect(clampCompactPathMaxLen('nope')).toBe(DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN);
 });

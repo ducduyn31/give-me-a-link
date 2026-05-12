@@ -1,4 +1,4 @@
-import { type Field, FIELDS, PREVIEW_SAMPLE } from './fields';
+import { type Field, FIELDS } from './fields';
 import { loadSettings, saveSettings, type Settings } from '../shared/settings';
 
 const STATUS_IDLE = 'Settings save automatically.';
@@ -65,9 +65,10 @@ function renderField(
       const previewEl = preview
         ? el('pre', { className: 'preview' }, preview(initial[field.key]))
         : null;
-      const previewLabel = preview
-        ? el('div', { className: 'hint' }, `Preview for ${PREVIEW_SAMPLE.url}`)
-        : null;
+      const previewLabel =
+        preview && field.previewSourceLabel
+          ? el('div', { className: 'hint' }, `Preview for ${field.previewSourceLabel}`)
+          : null;
       input.addEventListener('input', () => {
         const next = field.parse(input.value);
         if (previewEl && preview) previewEl.textContent = preview(next);

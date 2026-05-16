@@ -9,8 +9,10 @@ import {
   formatGithubLink,
   formatLines,
   formatLink,
+  parseConditionalFormats,
   parseGithubLinkTemplate,
   parseLinkTemplate,
+  pickTemplate,
   type GithubLinkSource,
 } from '../src/shared/format';
 
@@ -215,4 +217,85 @@ test('clampCompactPathMaxLen: rounds non-integer', () => {
 
 test('clampCompactPathMaxLen: defaults on non-numeric', () => {
   expect(clampCompactPathMaxLen('nope')).toBe(DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN);
+});
+
+test('parseConditionalFormats: non-array returns empty', () => {
+  expect(parseConditionalFormats(undefined)).toEqual([]);
+  expect(parseConditionalFormats(null)).toEqual([]);
+  expect(parseConditionalFormats('nope')).toEqual([]);
+  expect(parseConditionalFormats({})).toEqual([]);
+});
+
+test('parseConditionalFormats: keeps valid rows and drops malformed ones, preserving order', () => {
+  const input = [
+    { pattern: '^https://a\\.com/', template: '[A]({url})' },
+    { pattern: 42, template: '[bad]({url})' },
+    { pattern: '^https://b\\.com/', template: '' },
+    null,
+    { pattern: '^https://c\\.com/', template: '[C]({url})' },
+    { template: '[no-pattern]({url})' },
+  ];
+  expect(parseConditionalFormats(input)).toEqual([
+    { pattern: '^https://a\\.com/', template: '[A]({url})' },
+    { pattern: '^https://c\\.com/', template: '[C]({url})' },
+  ]);
+});
+
+test('parseConditionalFormats: drops overlong pattern or template', () => {
+  const long = 'x'.repeat(501);
+  expect(
+    parseConditionalFormats([
+      { pattern: long, template: '[ok]({url})' },
+      { pattern: '^ok', template: long },
+      { pattern: '^ok', template: '[ok]({url})' },
+    ]),
+  ).toEqual([{ pattern: '^ok', template: '[ok]({url})' }]);
+});
+
+test('parseConditionalFormats: keeps rule with invalid regex (validated at match time)', () => {
+  const input = [{ pattern: '[unclosed', template: '[X]({url})' }];
+  expect(parseConditionalFormats(input)).toEqual([
+    { pattern: '[unclosed', template: '[X]({url})' },
+  ]);
+});
+
+test('pickTemplate: empty rules returns fallback', () => {
+  expect(pickTemplate('https://example.com', [], DEFAULT_LINK_TEMPLATE)).toBe(
+    DEFAULT_LINK_TEMPLATE,
+  );
+});
+
+test('pickTemplate: first matching rule wins', () => {
+  const rules = [
+    { pattern: '^https://github\\.com/', template: '[first]({url})' },
+    { pattern: '^https://', template: '[second]({url})' },
+  ];
+  expect(pickTemplate('https://github.com/foo', rules, DEFAULT_LINK_TEMPLATE)).toBe(
+    '[first]({url})',
+  );
+});
+
+test('pickTemplate: falls through when no rule matches', () => {
+  const rules = [{ pattern: '^https://github\\.com/', template: '[gh]({url})' }];
+  expect(pickTemplate('https://example.com', rules, DEFAULT_LINK_TEMPLATE)).toBe(
+    DEFAULT_LINK_TEMPLATE,
+  );
+});
+
+test('pickTemplate: invalid regex is skipped, evaluation continues', () => {
+  const rules = [
+    { pattern: '[unclosed', template: '[bad]({url})' },
+    { pattern: '^https://', template: '[good]({url})' },
+  ];
+  expect(pickTemplate('https://example.com', rules, DEFAULT_LINK_TEMPLATE)).toBe('[good]({url})');
+});
+
+test('pickTemplate: all invalid rules fall through to fallback', () => {
+  const rules = [
+    { pattern: '[unclosed', template: '[bad1]({url})' },
+    { pattern: '(unfinished', template: '[bad2]({url})' },
+  ];
+  expect(pickTemplate('https://example.com', rules, DEFAULT_LINK_TEMPLATE)).toBe(
+    DEFAULT_LINK_TEMPLATE,
+  );
 });

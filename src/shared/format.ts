@@ -24,6 +24,47 @@ export function parseGithubLinkTemplate(value: unknown): string {
   return validateTemplate(value, DEFAULT_GITHUB_LINK_TEMPLATE);
 }
 
+export interface ConditionalFormat {
+  pattern: string;
+  template: string;
+}
+
+function isValidPattern(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= MAX_TEMPLATE_LENGTH;
+}
+
+function isValidTemplate(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= MAX_TEMPLATE_LENGTH;
+}
+
+export function parseConditionalFormats(value: unknown): ConditionalFormat[] {
+  if (!Array.isArray(value)) return [];
+  const out: ConditionalFormat[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') continue;
+    const pattern = (entry as Record<string, unknown>).pattern;
+    const template = (entry as Record<string, unknown>).template;
+    if (!isValidPattern(pattern) || !isValidTemplate(template)) continue;
+    out.push({ pattern, template });
+  }
+  return out;
+}
+
+export function pickTemplate(
+  url: string,
+  rules: ReadonlyArray<ConditionalFormat>,
+  fallback: string,
+): string {
+  for (const rule of rules) {
+    try {
+      if (new RegExp(rule.pattern).test(url)) return rule.template;
+    } catch {
+      // invalid regex → skip
+    }
+  }
+  return fallback;
+}
+
 export interface LinkSource {
   url: string;
   title?: string;

@@ -1,4 +1,4 @@
-import { formatLink } from '../shared/format';
+import { formatLink, pickTemplate } from '../shared/format';
 import { loadSettings } from '../shared/settings';
 import { copyAndNotify } from './inject/toast';
 
@@ -20,7 +20,8 @@ chrome.commands.onCommand.addListener(async (command: string) => {
     }
 
     const settings = await loadSettings();
-    const text = formatLink({ url: tab.url, title: tab.title }, settings.linkTemplate);
+    const template = pickTemplate(tab.url, settings.conditionalFormats, settings.linkTemplate);
+    const text = formatLink({ url: tab.url, title: tab.title }, template);
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },

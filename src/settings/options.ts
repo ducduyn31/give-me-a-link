@@ -1,4 +1,5 @@
 import { type Field, FIELDS } from './fields';
+import type { ConditionalFormat } from '../shared/format';
 import { loadSettings, saveSettings, type Settings } from '../shared/settings';
 
 const STATUS_IDLE = 'Settings save automatically.';
@@ -125,6 +126,254 @@ function renderField(
         },
       };
     }
+    case 'rules': {
+      wrapper.append(el('label', {}, field.label));
+      if (hint) wrapper.append(hint);
+
+      const testUrlId = `${id}-test-url`;
+      const testUrlInput = el('input', {
+        type: 'text',
+        id: testUrlId,
+        placeholder: 'https://github.com/foo/bar/issues/1',
+      });
+      const testBlock = el(
+        'div',
+        { className: 'rules__test' },
+        el('label', { htmlFor: testUrlId }, 'Test URL'),
+        testUrlInput,
+      );
+      wrapper.append(testBlock);
+
+      const list = el('div', { className: 'rules-list' });
+      wrapper.append(list);
+
+      type Row = {
+        node: HTMLElement;
+        header: HTMLElement;
+        patternInput: HTMLInputElement;
+        templateInput: HTMLInputElement;
+        errorEl: HTMLElement;
+        previewEl: HTMLElement;
+        upBtn: HTMLButtonElement;
+        downBtn: HTMLButtonElement;
+      };
+
+      const rows: Row[] = [];
+      const data: ConditionalFormat[] = [...initial[field.key]];
+      const renderPreview = field.preview;
+      const defaultSample = field.defaultSample;
+      const fieldKey = field.key;
+
+      function commit(): void {
+        const valid = data.filter((r) => r.pattern.length > 0 && r.template.length > 0);
+        save(patch(fieldKey, valid));
+      }
+
+      function refreshMatches(): void {
+        const testUrl = testUrlInput.value;
+        let matchedIndex = -1;
+        if (testUrl.length > 0) {
+          for (let i = 0; i < data.length; i++) {
+            const p = data[i].pattern;
+            if (p.length === 0) continue;
+            try {
+              if (new RegExp(p).test(testUrl)) {
+                matchedIndex = i;
+                break;
+              }
+            } catch {
+              // skip
+            }
+          }
+        }
+        for (let i = 0; i < rows.length; i++) {
+          const matched = i === matchedIndex;
+          rows[i].node.classList.toggle('rule--matched', matched);
+          const previewSource = matched && testUrl.length > 0 ? { url: testUrl } : defaultSample;
+          try {
+            rows[i].previewEl.textContent = renderPreview(data[i].template, previewSource);
+          } catch {
+            rows[i].previewEl.textContent = '';
+          }
+        }
+      }
+
+      function renumber(): void {
+        for (let i = 0; i < rows.length; i++) {
+          rows[i].header.textContent = `Rule ${i + 1}`;
+          rows[i].upBtn.disabled = i === 0;
+          rows[i].downBtn.disabled = i === rows.length - 1;
+        }
+      }
+
+      function moveRow(from: number, to: number): void {
+        if (to < 0 || to >= rows.length || from === to) return;
+        const [row] = rows.splice(from, 1);
+        rows.splice(to, 0, row);
+        const [datum] = data.splice(from, 1);
+        data.splice(to, 0, datum);
+        for (const r of rows) list.appendChild(r.node);
+        renumber();
+        refreshMatches();
+        commit();
+      }
+
+      function addRow(initialValue: ConditionalFormat): void {
+        const index = rows.length;
+        data.push({ ...initialValue });
+
+        const header = el('span', { className: 'rule__title' }, `Rule ${index + 1}`);
+        const upBtn = el('button', {
+          type: 'button',
+          className: 'rule__move',
+          title: 'Move up',
+          ariaLabel: 'Move rule up',
+        });
+        upBtn.textContent = '↑';
+        const downBtn = el('button', {
+          type: 'button',
+          className: 'rule__move',
+          title: 'Move down',
+          ariaLabel: 'Move rule down',
+        });
+        downBtn.textContent = '↓';
+        const removeBtn = el('button', { type: 'button', className: 'rule__remove' }, 'Remove');
+        const patternInput = el('input', {
+          type: 'text',
+          placeholder: '^https://github\\.com/.+/issues/',
+        });
+        patternInput.value = initialValue.pattern;
+        const templateInput = el('input', {
+          type: 'text',
+          placeholder: '[{host}/{path[0]}]({url})',
+        });
+        templateInput.value = initialValue.template;
+        const errorEl = el('div', { className: 'rule__error' });
+        errorEl.hidden = true;
+        const previewEl = el('pre', { className: 'preview' });
+
+        const node = el(
+          'div',
+          { className: 'rule' },
+          el(
+            'div',
+            { className: 'rule__header' },
+            header,
+            el('div', { className: 'rule__actions' }, upBtn, downBtn, removeBtn),
+          ),
+          el('label', {}, 'Pattern'),
+          patternInput,
+          errorEl,
+          el('label', {}, 'Template'),
+          templateInput,
+          previewEl,
+        );
+
+        const row: Row = {
+          node,
+          header,
+          patternInput,
+          templateInput,
+          errorEl,
+          previewEl,
+          upBtn,
+          downBtn,
+        };
+        rows.push(row);
+        list.append(node);
+
+        function updateRowError(): void {
+          const pattern = patternInput.value;
+          if (pattern.length === 0 || isValidRegex(pattern)) {
+            errorEl.hidden = true;
+            errorEl.textContent = '';
+          } else {
+            errorEl.hidden = false;
+            errorEl.textContent = `Invalid regex: ${regexError(pattern)}`;
+          }
+        }
+
+        patternInput.addEventListener('input', () => {
+          const i = rows.indexOf(row);
+          if (i === -1) return;
+          data[i].pattern = patternInput.value;
+          updateRowError();
+          refreshMatches();
+          commit();
+        });
+
+        templateInput.addEventListener('input', () => {
+          const i = rows.indexOf(row);
+          if (i === -1) return;
+          data[i].template = templateInput.value;
+          refreshMatches();
+          commit();
+        });
+
+        removeBtn.addEventListener('click', () => {
+          const i = rows.indexOf(row);
+          if (i === -1) return;
+          rows.splice(i, 1);
+          data.splice(i, 1);
+          node.remove();
+          renumber();
+          refreshMatches();
+          commit();
+        });
+
+        upBtn.addEventListener('click', () => {
+          const i = rows.indexOf(row);
+          if (i === -1) return;
+          moveRow(i, i - 1);
+        });
+
+        downBtn.addEventListener('click', () => {
+          const i = rows.indexOf(row);
+          if (i === -1) return;
+          moveRow(i, i + 1);
+        });
+
+        updateRowError();
+        renumber();
+      }
+
+      for (const rule of initial[field.key]) addRow(rule);
+
+      const addBtn = el('button', { type: 'button', className: 'rules__add' }, '+ Add rule');
+      addBtn.addEventListener('click', () => {
+        addRow({ pattern: '', template: '' });
+        refreshMatches();
+        // No commit() — empty rows are filtered out and would no-op.
+      });
+      wrapper.append(addBtn);
+
+      testUrlInput.addEventListener('input', refreshMatches);
+
+      refreshMatches();
+
+      return {
+        node: wrapper,
+        applyDependency: () => {},
+      };
+    }
+  }
+}
+
+function isValidRegex(pattern: string): boolean {
+  try {
+    new RegExp(pattern);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function regexError(pattern: string): string {
+  try {
+    new RegExp(pattern);
+    return '';
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
   }
 }
 

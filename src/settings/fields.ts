@@ -1,11 +1,13 @@
 import {
   clampCompactPathMaxLen,
   clampDuration,
+  type ConditionalFormat,
   DEFAULT_GITHUB_COMPACT_PATH_MAX_LEN,
   DEFAULT_GITHUB_LINK_TEMPLATE,
   DEFAULT_LINK_TEMPLATE,
   formatGithubLink,
   formatLink,
+  parseConditionalFormats,
   parseGithubLinkTemplate,
   parseLinkTemplate,
   type GithubLinkSource,
@@ -61,10 +63,21 @@ interface NumberField<K extends NumberKey> {
   parse: (raw: unknown) => Settings[K];
 }
 
+interface RulesField {
+  kind: 'rules';
+  key: 'conditionalFormats';
+  label: string;
+  hint?: string;
+  parse: (raw: unknown) => ConditionalFormat[];
+  preview: (template: string, source: LinkSource) => string;
+  defaultSample: LinkSource;
+}
+
 export type Field =
   | { [K in StringKey]: SelectField<K> | TextField<K> }[StringKey]
   | { [K in BooleanKey]: CheckboxField<K> }[BooleanKey]
-  | { [K in NumberKey]: NumberField<K> }[NumberKey];
+  | { [K in NumberKey]: NumberField<K> }[NumberKey]
+  | RulesField;
 
 export const PREVIEW_SAMPLE: LinkSource = {
   url: 'https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3',
@@ -94,6 +107,18 @@ export const FIELDS: ReadonlyArray<Field> = [
     parse: parseLinkTemplate,
     preview: (template) => formatLink(PREVIEW_SAMPLE, template),
     previewSourceLabel: PREVIEW_SAMPLE.url,
+  },
+  {
+    kind: 'rules',
+    key: 'conditionalFormats',
+    label: 'Conditional formats',
+    hint:
+      'Apply a different template when the URL matches a regex. The first matching rule wins; ' +
+      'otherwise the clipboard template above is used. Type a URL into "Test URL" to see which ' +
+      'rule would apply.',
+    parse: parseConditionalFormats,
+    preview: (template, source) => formatLink(source, template),
+    defaultSample: PREVIEW_SAMPLE,
   },
   {
     kind: 'checkbox',

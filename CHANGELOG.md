@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- 7e676a8: support conditional template format
+
 ## 1.2.0
 
 ### Minor Changes

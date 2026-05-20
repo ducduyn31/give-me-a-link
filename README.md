@@ -22,7 +22,7 @@ bun install
 bun run build
 ```
 
-The unpacked extension is then in `dist/extension/`.
+The build emits two unpacked extensions: `dist/extension/` for Chrome and `dist/extension-firefox/` for Firefox. They share identical JS; only the manifest differs (Firefox doesn't support the `offscreen` permission, so it's stripped from that build).
 
 ### Chrome
 
@@ -34,7 +34,7 @@ The unpacked extension is then in `dist/extension/`.
 
 1. Open `about:debugging`.
 2. Click **This Firefox** → **Load Temporary Add-on…**.
-3. Pick `dist/extension/manifest.json`.
+3. Pick `dist/extension-firefox/manifest.json`.
 
 Firefox unloads temporary add-ons on browser restart; reload via the same dialog.
 
@@ -73,7 +73,7 @@ GiveMeALink runs entirely locally. It does not collect, transmit, or store any d
 - Persists your settings (template, toast preferences) via `chrome.storage`, which lives on your device.
 - Makes no network requests. No analytics, no telemetry, no remote code.
 
-The `activeTab` and `scripting` permissions exist solely to inject the success toast into the page after a copy; the injected code does not read page content.
+The `activeTab` and `scripting` permissions exist solely to inject the success toast into the page after a copy; the injected code does not read page content. The Chrome build also requests `offscreen` (used to perform the clipboard write from an extension page so it works even when DevTools or the omnibox has focus). The Firefox build instead requests `clipboardWrite` for the same reason — Firefox doesn't implement the offscreen API.
 
 ## Development
 
@@ -85,8 +85,8 @@ bun run lint        # oxlint
 bun run format      # oxfmt (use format:check in CI)
 bun run typecheck   # tsc --noEmit (configured via tsconfig.json)
 bun test            # bun's built-in test runner
-bun run build       # bundles src/ into dist/extension/
-bun run package     # builds, then zips into dist/url-md-link-<version>.zip
+bun run build       # bundles src/ into dist/extension/ (Chrome) and dist/extension-firefox/
+bun run package     # builds, then zips both targets into dist/<name>-<version>.zip and dist/<name>-<version>-firefox.zip
 ```
 
 `bun run verify` runs lint, format check, typecheck, and tests in one shot. CI runs the same on every push and PR and uploads the packaged zip as an artifact (see `.github/workflows/ci.yml`).
@@ -98,8 +98,8 @@ bun run package     # builds, then zips into dist/url-md-link-<version>.zip
 - `src/lib/format.ts` — pure helpers (`formatLink`, `clampDuration`) shared between both entries and the tests.
 - `manifest.json` / `options.html` — static assets at the repo root; copied verbatim into `dist/extension/` by the build.
 - `test/` — unit tests using `bun:test`.
-- `scripts/build.ts` — `Bun.build` bundler invocation. Emits self-contained IIFE files for `background.js` and `options.js` so they load both as a Chrome MV3 service worker and a Firefox MV3 event page.
-- `scripts/package.ts` — runs the build, then zips `dist/extension/` into `dist/<name>-<version>.zip`. Fails if `manifest.json` and `package.json` versions disagree.
+- `scripts/build.ts` — `Bun.build` bundler invocation. Emits self-contained IIFE files for `background.js` and `options.js` so they load both as a Chrome MV3 service worker and a Firefox MV3 event page. Produces two output dirs: `dist/extension/` (Chrome) and `dist/extension-firefox/` (Firefox manifest with the `offscreen` permission stripped).
+- `scripts/package.ts` — runs the build, then zips each output dir into `dist/<name>-<version>.zip` (Chrome) and `dist/<name>-<version>-firefox.zip`. Fails if either `manifest.json` and `package.json` versions disagree.
 
 ### Releasing
 
@@ -113,7 +113,7 @@ On every change that should ship to users:
 Once merged into `main`:
 
 1. The Release workflow runs `changesets/action`, which opens (or updates) a `chore: release` PR. That PR bumps `package.json`, syncs `manifest.json` via `scripts/sync-manifest-version.ts`, and rolls the changeset entries into `CHANGELOG.md`.
-2. Merge the release PR. The same workflow re-runs, sees the version is fresh, and executes `bun run release` — which builds, zips, uploads to the Chrome Web Store, signs + submits to Firefox AMO, and creates a GitHub release with the zip attached.
+2. Merge the release PR. The same workflow re-runs, sees the version is fresh, and executes `bun run release` — which builds, zips, uploads the Chrome zip to the Chrome Web Store, signs + submits the Firefox build to AMO, and creates a GitHub release with both zips attached.
 
 ## Known limitations
 

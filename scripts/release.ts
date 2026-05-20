@@ -21,8 +21,9 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const version: string = pkg.version;
-const zipPath = resolve(root, 'dist', `${pkg.name}-${version}.zip`);
-const extDir = resolve(root, 'dist/extension');
+const chromeZip = resolve(root, 'dist', `${pkg.name}-${version}.zip`);
+const firefoxZip = resolve(root, 'dist', `${pkg.name}-${version}-firefox.zip`);
+const firefoxDir = resolve(root, 'dist/extension-firefox');
 const tag = `v${version}`;
 
 // changesets/action calls `publish` on every push to main, even when there
@@ -65,14 +66,14 @@ const chrome = need(
   'CHROME_REFRESH_TOKEN',
 );
 if (chrome) {
-  console.log(`\n→ Chrome Web Store: uploading ${zipPath}`);
+  console.log(`\n→ Chrome Web Store: uploading ${chromeZip}`);
   execFileSync(
     'bunx',
     [
       'chrome-webstore-upload-cli@3',
       'upload',
       '--source',
-      zipPath,
+      chromeZip,
       '--extension-id',
       chrome.CHROME_EXTENSION_ID,
       '--client-id',
@@ -90,14 +91,14 @@ if (chrome) {
 // Firefox AMO
 const firefox = need('FIREFOX_JWT_ISSUER', 'FIREFOX_JWT_SECRET');
 if (firefox) {
-  console.log(`\n→ Firefox AMO: signing + submitting ${extDir}`);
+  console.log(`\n→ Firefox AMO: signing + submitting ${firefoxDir}`);
   execFileSync(
     'bunx',
     [
       'web-ext@8',
       'sign',
       '--channel=listed',
-      `--source-dir=${extDir}`,
+      `--source-dir=${firefoxDir}`,
       `--artifacts-dir=${resolve(root, 'dist/web-ext-artifacts')}`,
       `--api-key=${firefox.FIREFOX_JWT_ISSUER}`,
       `--api-secret=${firefox.FIREFOX_JWT_SECRET}`,
@@ -117,10 +118,11 @@ if (process.env.GITHUB_TOKEN) {
     new RegExp(`^## (?:\\[)?${escaped}.*?$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'),
   );
   const notes = match?.[1]?.trim() || `Release ${tag}`;
-  execFileSync('gh', ['release', 'create', tag, zipPath, '--title', tag, '--notes', notes], {
-    cwd: root,
-    stdio: 'inherit',
-  });
+  execFileSync(
+    'gh',
+    ['release', 'create', tag, chromeZip, firefoxZip, '--title', tag, '--notes', notes],
+    { cwd: root, stdio: 'inherit' },
+  );
 } else {
   skipped.push('GitHub release (missing: GITHUB_TOKEN)');
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- d2f61ee: Fix extension crash when switching to a tab that hasn't been focused.
+
 ## 1.3.0
 
 ### Minor Changes

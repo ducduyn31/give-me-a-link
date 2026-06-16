@@ -12,6 +12,13 @@
   },
   "permissions": ["activeTab", "scripting", "storage", "offscreen"],
   "host_permissions": ["https://github.com/*"],
+  "action": {
+    "default_title": "Copy as Markdown link",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://github.com/*/blob/*"],

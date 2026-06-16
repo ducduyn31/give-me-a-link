@@ -13,6 +13,8 @@ Tiny cross-browser extension. Press the shortcut on any page and your clipboard 
 
 Rebind it at `chrome://extensions/shortcuts` (Chrome) or `about:addons` → cog ⚙ → "Manage Extension Shortcuts" (Firefox).
 
+You can also click the extension's toolbar button to copy — handy in browsers like **Arc** that don't deliver extension keyboard shortcuts. Pin the extension to the toolbar first (Arc hides extension buttons by default), then click it on any page.
+
 ## Install (unpacked)
 
 Build the extension first so the browser has plain JavaScript to load:

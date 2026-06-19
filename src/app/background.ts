@@ -45,64 +45,80 @@ async function copyViaOffscreen(text: string): Promise<OffscreenCopyResponse> {
   return response ?? { ok: false, error: 'no response from offscreen document' };
 }
 
+// Core copy flow, shared by the keyboard command and the toolbar-button click.
+// Both need an active tab with a copyable URL; they differ only in how they
+// obtain that tab (commands query for it, action.onClicked hands it over).
+async function copyForTab(tab: chrome.tabs.Tab | undefined): Promise<void> {
+  if (!tab?.url || tab.id === undefined) {
+    console.warn('[give-me-a-link] no active tab URL');
+    return;
+  }
+  if (!SUPPORTED_SCHEME.test(tab.url)) {
+    console.warn('[give-me-a-link] unsupported URL scheme:', tab.url);
+    return;
+  }
+
+  const settings = await loadSettings();
+  const template = pickTemplate(tab.url, settings.conditionalFormats, settings.linkTemplate);
+  const text = formatLink({ url: tab.url, title: tab.title }, template);
+
+  if (offscreenAvailable()) {
+    let result: OffscreenCopyResponse;
+    try {
+      result = await copyViaOffscreen(text);
+    } catch (err) {
+      result = { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+    if (result.ok) {
+      if (settings.toastEnabled) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: notifyOnly,
+          args: [
+            {
+              kind: 'success',
+              title: 'Copied',
+              body: text,
+              durationMs: settings.toastDurationMs,
+            },
+          ],
+        });
+      }
+      return;
+    }
+    // Offscreen path failed (e.g. some Chrome versions block execCommand
+    // there). Fall through to the in-page copy: it can fail when DevTools
+    // owns focus, but it usually doesn't, so it's a useful last resort —
+    // and copyAndNotify already renders an error toast itself if it can't
+    // write either.
+    console.warn('[give-me-a-link] offscreen copy failed, falling back to in-page:', result.error);
+  }
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: copyAndNotify,
+    args: [{ text, toastEnabled: settings.toastEnabled, durationMs: settings.toastDurationMs }],
+  });
+}
+
 chrome.commands.onCommand.addListener(async (command: string) => {
   if (command !== COMMAND_NAME) return;
-
   try {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-    if (!tab?.url || tab.id === undefined) {
-      console.warn('[give-me-a-link] no active tab URL');
-      return;
-    }
-    if (!SUPPORTED_SCHEME.test(tab.url)) {
-      console.warn('[give-me-a-link] unsupported URL scheme:', tab.url);
-      return;
-    }
+    await copyForTab(tab);
+  } catch (err) {
+    console.error('[give-me-a-link] failed:', err);
+  }
+});
 
-    const settings = await loadSettings();
-    const template = pickTemplate(tab.url, settings.conditionalFormats, settings.linkTemplate);
-    const text = formatLink({ url: tab.url, title: tab.title }, template);
-
-    if (offscreenAvailable()) {
-      let result: OffscreenCopyResponse;
-      try {
-        result = await copyViaOffscreen(text);
-      } catch (err) {
-        result = { ok: false, error: err instanceof Error ? err.message : String(err) };
-      }
-      if (result.ok) {
-        if (settings.toastEnabled) {
-          await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: notifyOnly,
-            args: [
-              {
-                kind: 'success',
-                title: 'Copied',
-                body: text,
-                durationMs: settings.toastDurationMs,
-              },
-            ],
-          });
-        }
-        return;
-      }
-      // Offscreen path failed (e.g. some Chrome versions block execCommand
-      // there). Fall through to the in-page copy: it can fail when DevTools
-      // owns focus, but it usually doesn't, so it's a useful last resort —
-      // and copyAndNotify already renders an error toast itself if it can't
-      // write either.
-      console.warn(
-        '[give-me-a-link] offscreen copy failed, falling back to in-page:',
-        result.error,
-      );
-    }
-
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: copyAndNotify,
-      args: [{ text, toastEnabled: settings.toastEnabled, durationMs: settings.toastDurationMs }],
-    });
+// Toolbar-button click. This is the primary trigger in browsers that don't
+// deliver extension `commands` keyboard shortcuts — notably Arc, where the
+// Cmd+./Ctrl+. command never fires. onClicked hands us the active tab directly,
+// with a fresh user gesture. Requires the manifest `action` to have no
+// `default_popup`, otherwise the popup opens instead of firing this listener.
+chrome.action.onClicked.addListener(async (tab) => {
+  try {
+    await copyForTab(tab);
   } catch (err) {
     console.error('[give-me-a-link] failed:', err);
   }

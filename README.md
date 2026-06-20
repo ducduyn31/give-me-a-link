@@ -50,16 +50,22 @@ From the extensions page, open the extension's **Options** / **Preferences**:
   - `{path[N]}` — the Nth non-empty path segment, 0-indexed (e.g. `{path[0]}` → `ducduyn31`). Out-of-range indices render as empty.
   - `{url}` — full original URL, including query string and hash.
   - `{title}` — current tab title.
+  - `{hash}` — URL fragment without the leading `#` (e.g. `comment-3` from `#comment-3`). Empty if no fragment.
+  - `{query}` — full query string without the leading `?` (e.g. `tab=open` from `?tab=open`). Empty if no query string.
+  - `{query:name}` — value of a specific query parameter by name (e.g. `{query:tab}` → `open`). Empty if the parameter is absent.
   - Unknown `{tokens}` are left literal so typos are visible. An empty template falls back to the default.
 
-  Examples against `https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open`:
+  Examples against `https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3`:
 
-  | Template                              | Result                                                                                                            |
-  | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-  | `[{host}/{path[0]}]({url})` (default) | `[github.com/ducduyn31](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)`                          |
-  | `[{host}{path}]({url})`               | `[github.com/ducduyn31/give-me-a-link/issues/12](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)` |
-  | `[{host}]({url})`                     | `[github.com](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open)`                                    |
-  | `{title} — {url}`                     | `Issue 12 · ducduyn31/give-me-a-link — https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open`            |
+  | Template                              | Result                                                                                                                      |
+  | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+  | `[{host}/{path[0]}]({url})` (default) | `[github.com/ducduyn31](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)`                          |
+  | `[{host}{path}]({url})`               | `[github.com/ducduyn31/give-me-a-link/issues/12](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)` |
+  | `[{host}]({url})`                     | `[github.com](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)`                                    |
+  | `{title} — {url}`                     | `Issue 12 · ducduyn31/give-me-a-link — https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3`            |
+  | `[{host}/{path[2]}#{hash}]({url})`    | `[github.com/issues#comment-3](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)`                   |
+  | `[{host}?{query}]({url})`             | `[github.com?tab=open](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)`                           |
+  | `[{host} ({query:tab})]({url})`       | `[github.com (open)](https://github.com/ducduyn31/give-me-a-link/issues/12?tab=open#comment-3)`                             |
 
 - **Toast** — show a small confirmation toast in the current page after copy. On by default. Duration in milliseconds, 200–10000.
 

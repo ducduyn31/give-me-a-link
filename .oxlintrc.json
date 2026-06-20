@@ -19,7 +19,7 @@
   "ignorePatterns": ["node_modules", "dist"],
   "overrides": [
     {
-      "files": ["test/**/*.ts", "scripts/**/*.ts"],
+      "files": ["test/**/*.ts", "test/**/*.tsx", "scripts/**/*.ts"],
       "env": {
         "node": true
       }

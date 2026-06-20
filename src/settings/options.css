@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    font:
+      14px/1.5 -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    color: #1c1c1e;
+    max-width: 480px;
+    margin: 32px auto;
+    padding: 0 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+    margin: 0 0 24px;
+  }
+}

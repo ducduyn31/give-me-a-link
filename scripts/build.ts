@@ -38,12 +38,19 @@ const result = await Bun.build({
     resolve(root, 'src/app/background.ts'),
     resolve(root, 'src/app/content/github-menu.ts'),
     resolve(root, 'src/app/offscreen.ts'),
-    resolve(root, 'src/settings/options.ts'),
+    resolve(root, 'src/settings/options.tsx'),
   ],
   outdir: chromeDir,
   format: 'iife',
   target: 'browser',
   naming: { entry: '[name].[ext]' },
+  // @ts-expect-error alias is supported at runtime but missing from @types/bun
+  alias: {
+    '@': resolve(root, 'src'),
+    react: 'preact/compat',
+    'react-dom': 'preact/compat',
+    'react/jsx-runtime': 'preact/jsx-runtime',
+  },
 });
 
 if (!result.success) {
@@ -51,10 +58,26 @@ if (!result.success) {
   process.exit(1);
 }
 
+// Compile Tailwind CSS
+const cssProc = Bun.spawnSync(
+  [
+    resolve(root, 'node_modules/.bin/tailwindcss'),
+    '-i',
+    resolve(root, 'src/settings/options.css'),
+    '-o',
+    resolve(chromeDir, 'options.css'),
+    '--minify',
+  ],
+  { cwd: root },
+);
+if (cssProc.exitCode !== 0) {
+  console.error(new TextDecoder().decode(cssProc.stderr));
+  process.exit(1);
+}
+
 const staticFiles: Array<[from: string, to: string]> = [
   ['manifest.json', 'manifest.json'],
   ['assets/options.html', 'options.html'],
-  ['assets/options.css', 'options.css'],
   ['assets/offscreen.html', 'offscreen.html'],
   ['LICENSE', 'LICENSE'],
   ['README.md', 'README.md'],

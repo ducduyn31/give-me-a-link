@@ -1,5 +1,5 @@
 import { type FieldPath, useFormContext } from 'react-hook-form';
-import type { Settings } from '../../shared/settings';
+import type { Settings } from '@/shared/settings';
 import type { SelectF } from '../types';
 
 export default function SelectField({ field }: { field: SelectF }) {

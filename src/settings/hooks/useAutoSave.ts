@@ -8,6 +8,13 @@ export interface UseAutoSaveResult {
   saved: boolean;
 }
 
+function persistSettingsAndNotify(values: Partial<Settings>, onSaved: () => void): void {
+  void saveSettings({
+    ...values,
+    conditionalFormats: (values.conditionalFormats ?? []).filter((r) => r?.pattern && r?.template),
+  } as Settings).then(onSaved);
+}
+
 export function useAutoSave(form: UseFormReturn<Settings>): UseAutoSaveResult {
   const { value: saved, setTrue: showSaved, setFalse: hideSaved } = useBoolean(false);
   useTimeout(hideSaved, saved ? STATUS_FLASH_MS : null);
@@ -22,13 +29,7 @@ export function useAutoSave(form: UseFormReturn<Settings>): UseAutoSaveResult {
         skipFirst.current = false;
         return;
       }
-      void saveSettings({
-        ...values,
-        conditionalFormats: (values.conditionalFormats ?? []).filter(
-          (r) => r?.pattern && r?.template,
-        ),
-      } as Settings);
-      showSaved();
+      persistSettingsAndNotify(values as Partial<Settings>, showSaved);
     });
     return unsubscribe;
   }, [form.watch, showSaved]);

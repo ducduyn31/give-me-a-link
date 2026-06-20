@@ -1,4 +1,4 @@
-import { DEFAULT_LINK_TEMPLATE, formatLink, parseLinkTemplate } from '../../../shared/format';
+import { DEFAULT_LINK_TEMPLATE, formatLink, parseLinkTemplate } from '@/shared/format';
 import LivePreview from '../../components/LivePreview';
 import TextField from '../../components/TextField';
 import { PREVIEW_SAMPLE } from '../../fields';

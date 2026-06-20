@@ -1,5 +1,6 @@
 import { type FieldPath, useFormContext } from 'react-hook-form';
-import type { Settings } from '../../shared/settings';
+import { cn } from '@/shared/cn';
+import type { Settings } from '@/shared/settings';
 import type { NumberF } from '../types';
 
 export default function NumberField({ field }: { field: NumberF }) {
@@ -19,7 +20,11 @@ export default function NumberField({ field }: { field: NumberF }) {
         max={field.max}
         step={field.step}
         disabled={disabled}
-        class="w-full px-2.5 py-2 text-sm border border-gray-300 rounded-md bg-white disabled:text-gray-400 disabled:bg-gray-50"
+        class={cn(
+          'w-full px-2.5 py-2 text-sm',
+          'border border-gray-300 rounded-md bg-white',
+          'disabled:text-gray-400 disabled:bg-gray-50',
+        )}
         {...register(field.key as FieldPath<Settings>, { setValueAs: field.parse })}
       />
       {field.hint && <div class="text-gray-500 text-xs mt-1">{field.hint}</div>}

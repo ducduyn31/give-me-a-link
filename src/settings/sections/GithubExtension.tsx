@@ -4,7 +4,7 @@ import {
   DEFAULT_GITHUB_LINK_TEMPLATE,
   formatGithubLink,
   parseGithubLinkTemplate,
-} from '../../shared/format';
+} from '@/shared/format';
 import LivePreview from '../components/LivePreview';
 import NumberField from '../components/NumberField';
 import TextField from '../components/TextField';

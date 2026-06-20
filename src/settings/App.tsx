@@ -1,5 +1,5 @@
 import { FormProvider, useForm } from 'react-hook-form';
-import { type Settings } from '../shared/settings';
+import { type Settings } from '@/shared/settings';
 import { STATUS_IDLE, STATUS_SAVED } from './constants';
 import { useAutoSave } from './hooks/useAutoSave';
 import ClipboardTemplate from './sections/ClipboardTemplate';

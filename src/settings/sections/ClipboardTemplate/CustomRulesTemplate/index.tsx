@@ -1,9 +1,9 @@
 import { useState } from 'preact/hooks';
 import { useDebounceValue } from 'usehooks-ts';
-import { formatLink, parseConditionalFormats, type LinkSource } from '../../../../shared/format';
+import { formatLink, parseConditionalFormats, type LinkSource } from '@/shared/format';
 import RuleList from './RuleList';
-import { PREVIEW_SAMPLE } from '../../../fields';
-import type { RulesF } from '../../../types';
+import { PREVIEW_SAMPLE } from '@/settings/fields';
+import type { RulesF } from '@/settings/types';
 
 export const conditionalFormatsField: RulesF = {
   kind: 'rules',

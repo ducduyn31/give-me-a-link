@@ -1,8 +1,9 @@
 import { type FieldPath, useFormContext } from 'react-hook-form';
-import type { LinkSource } from '../../../../../shared/format';
-import type { Settings } from '../../../../../shared/settings';
-import type { RulesF } from '../../../../types';
-import { isValidRegex, regexError } from '../../../../utils';
+import { cn } from '@/shared/cn';
+import type { LinkSource } from '@/shared/format';
+import type { Settings } from '@/shared/settings';
+import type { RulesF } from '@/settings/types';
+import { isValidRegex, regexError } from '@/settings/utils';
 
 export default function RuleRow({
   index,
@@ -42,12 +43,20 @@ export default function RuleRow({
     previewText = '';
   }
 
-  const moveButtonClass =
-    'bg-transparent border border-gray-300 rounded text-gray-700 text-xs leading-none cursor-pointer px-1.5 py-0.5 min-w-[22px] hover:border-blue-600 hover:text-blue-600 disabled:text-gray-300 disabled:border-gray-100 disabled:cursor-not-allowed';
+  const moveButtonClass = cn(
+    'bg-transparent border border-gray-300 rounded',
+    'text-gray-700 text-xs leading-none cursor-pointer',
+    'px-1.5 py-0.5 min-w-[22px]',
+    'hover:border-blue-600 hover:text-blue-600',
+    'disabled:text-gray-300 disabled:border-gray-100 disabled:cursor-not-allowed',
+  );
 
   return (
     <div
-      class={`rule border border-l-[3px] rounded-md p-3 bg-white ${matched ? 'rule--matched border-l-blue-600 bg-blue-50 border-gray-200' : 'border-gray-200'}`}
+      class={cn(
+        'rule border border-l-[3px] rounded-md p-3 bg-white',
+        matched ? 'rule--matched border-l-blue-600 bg-blue-50 border-gray-200' : 'border-gray-200',
+      )}
     >
       <div class="flex items-center justify-between mb-2">
         <span class="font-semibold text-sm text-gray-700">Rule {index + 1}</span>

@@ -9,4 +9,8 @@ async function init(): Promise<void> {
   render(<App initialSettings={settings} />, root);
 }
 
-void init();
+void init().catch((err) => {
+  console.error('options page failed to initialize:', err);
+  const root = document.getElementById('root');
+  if (root) root.textContent = 'Failed to load settings. Please try reopening this page.';
+});

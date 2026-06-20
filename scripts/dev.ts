@@ -39,7 +39,7 @@ const DEV_HTML = `<!doctype html>
   </body>
 </html>`;
 
-async function buildCss(): Promise<void> {
+async function buildCss(): Promise<boolean> {
   const proc = Bun.spawnSync(
     [
       resolve(root, 'node_modules/.bin/tailwindcss'),
@@ -52,12 +52,13 @@ async function buildCss(): Promise<void> {
   );
   if (proc.exitCode !== 0) {
     console.error('[dev] css error:', new TextDecoder().decode(proc.stderr));
-  } else {
-    console.log('[dev] css rebuilt');
+    return false;
   }
+  console.log('[dev] css rebuilt');
+  return true;
 }
 
-async function build(): Promise<void> {
+async function build(): Promise<boolean> {
   const result = await Bun.build({
     entrypoints: [
       resolve(root, 'src/dev/chrome-mock.ts'),
@@ -69,6 +70,7 @@ async function build(): Promise<void> {
     naming: { entry: '[name].[ext]' },
     // @ts-expect-error alias is supported at runtime but missing from @types/bun
     alias: {
+      '@': resolve(root, 'src'),
       react: 'preact/compat',
       'react-dom': 'preact/compat',
       'react/jsx-runtime': 'preact/jsx-runtime',
@@ -76,18 +78,23 @@ async function build(): Promise<void> {
   });
   if (!result.success) {
     for (const log of result.logs) console.error(log);
-  } else {
-    console.log('[dev] rebuilt');
-    notifyReload();
+    return false;
   }
+  console.log('[dev] rebuilt');
+  return true;
 }
 
-await Promise.all([build(), buildCss()]);
+async function buildAll(): Promise<void> {
+  const [js, css] = await Promise.all([build(), buildCss()]);
+  if (js && css) notifyReload();
+}
+
+await buildAll();
 
 let debounce: ReturnType<typeof setTimeout> | undefined;
 watch(resolve(root, 'src'), { recursive: true }, () => {
   clearTimeout(debounce);
-  debounce = setTimeout(() => Promise.all([build(), buildCss()]).catch(console.error), 100);
+  debounce = setTimeout(() => buildAll().catch(console.error), 100);
 });
 
 Bun.serve({
@@ -122,11 +129,18 @@ Bun.serve({
       });
     }
 
-    const builtFile = Bun.file(resolve(outdir, pathname.slice(1)));
-    if (await builtFile.exists()) return new Response(builtFile);
+    const builtPath = resolve(outdir, pathname.slice(1));
+    if (builtPath.startsWith(outdir + '/')) {
+      const builtFile = Bun.file(builtPath);
+      if (await builtFile.exists()) return new Response(builtFile);
+    }
 
-    const assetFile = Bun.file(resolve(root, 'assets', pathname.slice(1)));
-    if (await assetFile.exists()) return new Response(assetFile);
+    const assetsDir = resolve(root, 'assets');
+    const assetPath = resolve(assetsDir, pathname.slice(1));
+    if (assetPath.startsWith(assetsDir + '/')) {
+      const assetFile = Bun.file(assetPath);
+      if (await assetFile.exists()) return new Response(assetFile);
+    }
 
     return new Response('Not found', { status: 404 });
   },

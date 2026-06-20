@@ -1,4 +1,4 @@
-import { clampDuration } from '../../shared/format';
+import { clampDuration } from '@/shared/format';
 import CheckboxField from '../components/CheckboxField';
 import NumberField from '../components/NumberField';
 import type { CheckboxF, NumberF } from '../types';

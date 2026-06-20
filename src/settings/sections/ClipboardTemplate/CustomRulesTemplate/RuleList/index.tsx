@@ -1,6 +1,7 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
-import type { Settings } from '../../../../../shared/settings';
-import type { RulesF } from '../../../../types';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { cn } from '@/shared/cn';
+import type { Settings } from '@/shared/settings';
+import type { RulesF } from '@/settings/types';
 import RuleRow from './RuleRow';
 
 export default function RuleList({ field, testUrl }: { field: RulesF; testUrl: string }) {
@@ -9,13 +10,14 @@ export default function RuleList({ field, testUrl }: { field: RulesF; testUrl: s
     control,
     name: 'conditionalFormats',
   });
+  const liveFormats = useWatch({ control, name: 'conditionalFormats' });
 
   const matchedIndex = (() => {
     if (!testUrl) return -1;
-    for (let i = 0; i < fields.length; i++) {
-      if (!fields[i].pattern) continue;
+    for (let i = 0; i < (liveFormats?.length ?? 0); i++) {
+      if (!liveFormats[i]?.pattern) continue;
       try {
-        if (new RegExp(fields[i].pattern).test(testUrl)) return i;
+        if (new RegExp(liveFormats[i].pattern).test(testUrl)) return i;
       } catch {
         // invalid regex — skip
       }
@@ -42,7 +44,12 @@ export default function RuleList({ field, testUrl }: { field: RulesF; testUrl: s
       </div>
       <button
         type="button"
-        class="mt-2 px-3 py-1.5 text-sm border border-dashed border-gray-400 rounded-md bg-white text-gray-700 cursor-pointer hover:border-blue-600 hover:text-blue-600"
+        class={cn(
+          'mt-2 px-3 py-1.5 text-sm',
+          'border border-dashed border-gray-400 rounded-md',
+          'bg-white text-gray-700 cursor-pointer',
+          'hover:border-blue-600 hover:text-blue-600',
+        )}
         onClick={() => append({ pattern: '', template: '' })}
       >
         + Add rule

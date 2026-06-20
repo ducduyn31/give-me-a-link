@@ -46,6 +46,7 @@ const result = await Bun.build({
   naming: { entry: '[name].[ext]' },
   // @ts-expect-error alias is supported at runtime but missing from @types/bun
   alias: {
+    '@': resolve(root, 'src'),
     react: 'preact/compat',
     'react-dom': 'preact/compat',
     'react/jsx-runtime': 'preact/jsx-runtime',

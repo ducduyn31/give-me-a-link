@@ -9,7 +9,7 @@ export const linkTemplateField: TextF = {
   key: 'linkTemplate',
   label: 'Clipboard template',
   hint:
-    'Tokens: {host}, {path}, {path[0]} (or any non-negative index), {url}, {title}. ' +
+    'Tokens: {host}, {path}, {path[0]} (or any non-negative index), {url}, {title}, {hash}, {query}, {query:name}. ' +
     'Unknown {tokens} are left as-is. Empty value falls back to the default.',
   placeholder: DEFAULT_LINK_TEMPLATE,
   parse: parseLinkTemplate,

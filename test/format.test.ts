@@ -54,6 +54,30 @@ test('formatLink: unknown {token} is left literal', () => {
   expect(formatLink({ url: SAMPLE_URL }, '{nope}-{host}')).toBe('{nope}-github.com');
 });
 
+test('formatLink: {hash} returns fragment without leading #', () => {
+  expect(formatLink({ url: SAMPLE_URL }, '{hash}')).toBe('comment-3');
+});
+
+test('formatLink: {hash} returns empty string when no fragment', () => {
+  expect(formatLink({ url: 'https://github.com/foo' }, '{hash}')).toBe('');
+});
+
+test('formatLink: {query} returns full query string without leading ?', () => {
+  expect(formatLink({ url: SAMPLE_URL }, '{query}')).toBe('tab=open');
+});
+
+test('formatLink: {query} returns empty string when no query string', () => {
+  expect(formatLink({ url: 'https://github.com/foo' }, '{query}')).toBe('');
+});
+
+test('formatLink: {query:tab} returns value of named query parameter', () => {
+  expect(formatLink({ url: SAMPLE_URL }, '{query:tab}')).toBe('open');
+});
+
+test('formatLink: {query:missing} returns empty string for absent parameter', () => {
+  expect(formatLink({ url: SAMPLE_URL }, '{query:missing}')).toBe('');
+});
+
 test('formatLink: default template matches host + first segment shape', () => {
   expect(formatLink({ url: SAMPLE_URL }, DEFAULT_LINK_TEMPLATE)).toBe(
     `[github.com/ducduyn31](${SAMPLE_URL})`,

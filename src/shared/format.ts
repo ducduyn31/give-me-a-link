@@ -71,6 +71,7 @@ export interface LinkSource {
 }
 
 const PATH_INDEX = /^path\[(\d+)\]$/;
+const QUERY_PARAM = /^query:(.+)$/;
 
 export function formatLink(source: LinkSource, template: string): string {
   const u = new URL(source.url);
@@ -88,9 +89,15 @@ export function formatLink(source: LinkSource, template: string): string {
         return u.href;
       case 'title':
         return title;
+      case 'hash':
+        return u.hash.replace(/^#/, '');
+      case 'query':
+        return u.search.replace(/^\?/, '');
       default: {
         const m = PATH_INDEX.exec(key);
         if (m) return segments[Number(m[1])] ?? '';
+        const q = QUERY_PARAM.exec(key);
+        if (q) return u.searchParams.get(q[1]) ?? '';
         return raw;
       }
     }

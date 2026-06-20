@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+### Minor Changes
+
+- adc4de8: add query and hash for template
+
 ## 1.4.0
 
 ### Minor Changes

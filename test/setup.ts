@@ -2,9 +2,12 @@ import '@testing-library/jest-dom';
 import { afterEach } from 'bun:test';
 import { cleanup } from '@testing-library/preact';
 
-afterEach(cleanup);
-
 const store = new Map<string, unknown>();
+
+afterEach(() => {
+  cleanup();
+  store.clear();
+});
 
 (globalThis as Record<string, unknown>).chrome = {
   storage: {

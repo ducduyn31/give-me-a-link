@@ -90,16 +90,22 @@ export default function RuleRow({
           </button>
         </div>
       </div>
-      <label class="block text-xs font-medium mt-2 mb-1">Pattern</label>
+      <label for={`rule-${index}-pattern`} class="block text-xs font-medium mt-2 mb-1">
+        Pattern
+      </label>
       <input
+        id={`rule-${index}-pattern`}
         type="text"
         placeholder="^https://github\.com/.+/issues/"
         class="w-full px-2.5 py-2 text-sm font-mono border border-gray-300 rounded-md bg-white"
         {...register(patternKey)}
       />
       {patternError !== null && <div class="mt-1 text-red-700 text-xs">{patternError}</div>}
-      <label class="block text-xs font-medium mt-2 mb-1">Template</label>
+      <label for={`rule-${index}-template`} class="block text-xs font-medium mt-2 mb-1">
+        Template
+      </label>
       <input
+        id={`rule-${index}-template`}
         type="text"
         placeholder="[{host}/{path[0]}]({url})"
         class="w-full px-2.5 py-2 text-sm font-mono border border-gray-300 rounded-md bg-white"

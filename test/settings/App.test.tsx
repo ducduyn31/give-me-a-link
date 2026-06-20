@@ -1,5 +1,5 @@
 import { describe, expect, it, spyOn } from 'bun:test';
-import { fireEvent, render, screen } from '@testing-library/preact';
+import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import App from '../../src/settings/App';
 import { STATUS_SAVED } from '../../src/settings/constants';
 import { DEFAULTS, type Settings } from '../../src/shared/settings';
@@ -18,10 +18,10 @@ describe('App', () => {
   });
 
   describe('when a field changes', () => {
-    it('shows "Saved." in the status bar immediately after the change', () => {
+    it('shows "Saved." in the status bar immediately after the change', async () => {
       render(<App initialSettings={DEFAULTS} />);
       fireEvent.click(screen.getByLabelText('Show confirmation toast on copy'));
-      expect(screen.getByText(STATUS_SAVED)).toBeTruthy();
+      await waitFor(() => expect(screen.getByText(STATUS_SAVED)).toBeTruthy());
     });
 
     it('re-enables the toast duration field when toast is toggled on', () => {

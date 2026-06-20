@@ -6,8 +6,9 @@ import TextField from '../../src/settings/components/TextField';
 import { PREVIEW_SAMPLE } from '../../src/settings/fields';
 import { linkTemplateField } from '../../src/settings/sections/ClipboardTemplate/DefaultLinkTemplate';
 import { renderWithForm } from '../helpers/renderWithForm';
+import type { Settings } from '../../src/shared/settings';
 
-function renderBoth(overrides?: Record<string, unknown>) {
+function renderBoth(overrides?: Partial<Settings>) {
   return renderWithForm(
     <>
       <TextField field={linkTemplateField} />

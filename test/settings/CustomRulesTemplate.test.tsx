@@ -185,28 +185,30 @@ describe('CustomRulesTemplate', () => {
 
     it('matching follows the new order after reordering', () => {
       jest.useFakeTimers();
-      renderWithForm(<CustomRulesTemplate />, {
-        conditionalFormats: [
-          { pattern: '^https://a\\.com/', template: '[A]({url})' },
-          { pattern: '^https://github\\.com/', template: '[G]({url})' },
-        ],
-      });
-      typeTestUrl('https://github.com/foo');
-      advanceDebounce();
+      try {
+        renderWithForm(<CustomRulesTemplate />, {
+          conditionalFormats: [
+            { pattern: '^https://a\\.com/', template: '[A]({url})' },
+            { pattern: '^https://github\\.com/', template: '[G]({url})' },
+          ],
+        });
+        typeTestUrl('https://github.com/foo');
+        advanceDebounce();
 
-      // Rule 2 matches before reorder
-      const rulesBefore = document.querySelectorAll('.rule');
-      expect(rulesBefore[0]).not.toHaveClass('rule--matched');
-      expect(rulesBefore[1]).toHaveClass('rule--matched');
+        // Rule 2 matches before reorder
+        const rulesBefore = document.querySelectorAll('.rule');
+        expect(rulesBefore[0]).not.toHaveClass('rule--matched');
+        expect(rulesBefore[1]).toHaveClass('rule--matched');
 
-      // Move rule 2 up
-      fireEvent.click(screen.getAllByTitle('Move up')[1]);
+        // Move rule 2 up
+        fireEvent.click(screen.getAllByTitle('Move up')[1]);
 
-      const rulesAfter = document.querySelectorAll('.rule');
-      expect(rulesAfter[0]).toHaveClass('rule--matched');
-      expect(rulesAfter[1]).not.toHaveClass('rule--matched');
-
-      jest.useRealTimers();
+        const rulesAfter = document.querySelectorAll('.rule');
+        expect(rulesAfter[0]).toHaveClass('rule--matched');
+        expect(rulesAfter[1]).not.toHaveClass('rule--matched');
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 

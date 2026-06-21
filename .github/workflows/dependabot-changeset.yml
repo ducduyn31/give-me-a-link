@@ -27,7 +27,7 @@ jobs:
 
       - name: Checkout PR branch
         if: steps.meta.outputs.dependency-type == 'direct:production'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
